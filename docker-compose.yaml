@@ -1,0 +1,60 @@
+# เวอร์ชันของ Docker Compose
+version: '3.8'
+
+services:
+  # 1. Service ของ Go Application
+  app:
+    # Build จาก Dockerfile ใน directory ปัจจุบัน (.)
+    build: .
+    # ตั้งชื่อ container
+    container_name: turtle_badminton_api
+    # Map port 8080 ของ Host (เครื่องคุณ) ไปที่ 8080 ของ Container
+    ports:
+      - "8080:8080"
+    # ตั้งค่า Environment Variables ให้ Go app
+    environment:
+      # บอกให้ app ใช้ mysql
+      - DB_DRIVER=mysql
+      # DSN (Data Source Name) สำหรับเชื่อมต่อ MySQL
+      # "admin:your_admin_secret_password" คือ user/pass ที่เราจะตั้งใน service 'db'
+      # "db:3306" คือ "db" (ชื่อ service ของ mysql) และ port 3306 (port มาตรฐาน mysql)
+      # "turtle_db" คือ ชื่อ database
+      - DB_DSN=admin:P@ssw0rd@tcp(db:3306)/turtle_db?charset=utf8mb4&parseTime=True&loc=Local
+    # สั่งให้ service 'app' เริ่มทำงานหลังจาก 'db' เริ่มทำงานแล้ว
+    depends_on:
+      - db
+    # restart อัตโนมัติถ้าล่ม
+    restart: unless-stopped
+    networks:
+      - my-network
+
+  # 2. Service ของ MySQL Database
+  db:
+    # ใช้ image MySQL 8.0 (เป็นเวอร์ชันที่เสถียร)
+    image: mysql:8.0
+    container_name: turtle_badminton_db
+    # ตั้งค่า Environment Variables สำหรับ MySQL (สำคัญมาก)
+    environment:
+      - MYSQL_ROOT_PASSWORD=P@ssw0rd
+      - MYSQL_DATABASE=turtle_db # สร้าง DB นี้เมื่อ container เริ่ม
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=P@ssw0rd
+    # Map port 3306 ของ Host ไปที่ 3306 ของ Container
+    # เพื่อให้เราใช้โปรแกรมอย่าง DBeaver หรือ TablePlus เชื่อมเข้าไปดูข้อมูลได้
+    ports:
+      - "3306:3306"
+    # ใช้ named volume "mysql_data" เพื่อเก็บข้อมูล DB
+    # (ถ้าลบ container แล้วสร้างใหม่ ข้อมูลจะไม่หาย)
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - my-network
+
+# Named Volumes
+volumes:
+  mysql_data:
+
+networks:
+  my-network:
+    driver: bridge 
