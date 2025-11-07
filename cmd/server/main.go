@@ -3,8 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/Jirayut-l/turtle-badminton-api/internal/delivery/http"
-	"github.com/Jirayut-l/turtle-badminton-api/internal/infrastructure/datastore"
+	"github.com/Jirayut-l/turtle-badminton-api/internal/handler/http"
+	"github.com/Jirayut-l/turtle-badminton-api/internal/infrastructure/database"
+
 	"github.com/Jirayut-l/turtle-badminton-api/internal/usecase"
 	"github.com/gin-gonic/gin"
 )
@@ -18,14 +19,14 @@ func main() {
 
 	// 1. Setup Database (Infrastructure)
 	// InitDatabase() จะอ่าน ENV (DB_DRIVER, DB_DSN) เอง
-	db := datastore.InitDatabase()
+	db := database.InitDatabase()
 
 	// 2. Setup Repositories (Infrastructure Layer)
 	// "ฉีด" (Inject) gorm.DB instance เข้าไปใน GORM-based repositories
 	// นี่คือ implementation จริง
-	customerRepo := datastore.NewGormCustomerRepository(db)
-	productRepo := datastore.NewGormProductRepository(db)
-	jobRepo := datastore.NewGormRestringingJobRepository(db)
+	customerRepo := database.NewGormCustomerRepository(db)
+	productRepo := database.NewGormProductRepository(db)
+	jobRepo := database.NewGormRestringingJobRepository(db)
 
 	// 3. Setup Usecases (Application Logic Layer)
 	// "ฉีด" (Inject) repositories (ที่เป็น interface) เข้าไปใน usecases
